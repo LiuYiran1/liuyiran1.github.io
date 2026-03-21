@@ -145,16 +145,29 @@
 *   **核心逻辑**：求长度 $\le M$ 的最大子段和即求 $Max(S[R] - S[L-1])$，其中 $R - (L-1) \le M$。固定 $R$ 时，利用单调队列维护窗口内 $S$ 的最小值。
 *   **对应题目**：[洛谷 P1714 切前缀和](https://www.luogu.com.cn/problem/P1714)
 
+*暂时跳过*
+
 ### 位运算
 
-1. **Tricks**
+**1. Tricks**
    *   lowbit(n) = `n & -n`：获取二进制中最低位的 1（例如：$6(0110) \rightarrow 2(0010)$）。
    *   **去掉最低位的 1**：`n = n & (n - 1)`。例如 `n & (n-1)` 可以用来统计一个数中 1 的个数，循环几次就是几个 1。
    *   **判断奇偶**：`n & 1 == 1` (奇数) 或 `0` (偶数)。
    *   **判断 2 的幂**：`(n > 0) && ((n & (n - 1)) == 0)`。
    *   **Java 内置方法**：`Integer.bitCount(n)`（统计 1 的个数）、`Integer.numberOfTrailingZeros(n)`（尾部 0 的个数）。
 
+**2. 知识点：二进制拆分（快速幂运算）**
+*   **核心逻辑**：将指数 `b` 看作二进制数。利用 `b & 1` 判断当前位是否为 1，是则乘入底数；利用 `b >>= 1` 实现指数的“折半”处理。将时间复杂度从 $O(b)$ 优化至 $O(\log b)$。
+*   **对应题目**：[洛谷 P1226 (快速幂/取模幂)](https://www.luogu.com.cn/problem/P1226)
 
+**3. 知识点：状态压缩枚举（子集/组合问题）**
+*   **核心逻辑**：利用整数的二进制位 `0` 或 `1` 表示集合中元素的“不选”或“选中”。遍历 `0` 到 `(1 << N) - 1` 即可不重不漏地枚举出所有组合情况。利用 `Integer.bitCount(mask) == k` 可快速过滤出大小为 $k$ 的合法组合。
+*   **对应题目**：[洛谷 P1036 (选数)](https://www.luogu.com.cn/problem/P1036)
+
+**4. 知识点：状压 DP（状态转移）**
+
+*   **核心逻辑**：将整个局面编码为一个整数 `mask`。定义 `dp[mask][i]` 表示当前局面为 `mask` 且当前处于 `i` 时的最优状态。转移时使用位运算（如 `mask | (1 << j)`）将当前状态推向下一状态，外层循环必须按 `mask` 从小到大遍历以保证“无后效性”。
+*   **对应题目**：[洛谷 P1433 (吃奶酪)](https://www.luogu.com.cn/problem/P1433)、[洛谷 P2704 (炮兵阵地 - 进阶)](https://www.luogu.com.cn/problem/P2704)
 
 
 
@@ -192,5 +205,50 @@
           out.close();
       }
   ```
+- 小数学
 
-  
+  - GCD
+    ```java
+    int gcd(int a, int b) {
+        return b == 0 ? a : gcd(b, a % b);
+    }
+    ```
+
+  - LCM
+    ```java
+    long lcm(int a, int b) {
+        return (long)a / gcd(a, b) * b; // 先除后乘防止溢出
+    }
+    ```
+
+  - 判定素数
+
+    - 单个
+      ```java
+      bool isPrime(int n) {
+          if (n < 2) return false;
+          for (int i = 2; i * i <= n; i++) 
+              if (n % i == 0) return false;
+          return true;
+      }
+      ```
+
+    - 线性筛（找到1 - N的所有素数，O(N)）
+      ```java
+      int primes[N], cnt = 0;
+      bool st[N]; // st[i] 为 true 表示 i 是合数
+      void get_primes(int n) {
+          for (int i = 2; i <= n; i++) {
+              if (!st[i]) primes[cnt++] = i;
+              for (int j = 0; primes[j] * i <= n; j++) {
+                  st[primes[j] * i] = true;
+                  if (i % primes[j] == 0) break; // 保证每个合数只被最小质因子筛掉
+              }
+          }
+      }
+      ```
+
+
+
+
+
