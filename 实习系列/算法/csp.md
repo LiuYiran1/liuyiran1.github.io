@@ -9,6 +9,7 @@
 *   **对应题目**：[洛谷 P1719 最大加权矩形](https://www.luogu.com.cn/problem/P1719)
 
 **3. 知识点：二维差分（子矩阵修改）**
+
 *   **核心逻辑**：操作 4 个关键点，通过一次二维前缀和还原，将子矩阵批量修改优化至 $O(1)$。
 *   **对应题目**：[洛谷 P3397 地毯](https://www.luogu.com.cn/problem/P3397)
 
@@ -133,6 +134,8 @@
 *   **核心逻辑**：将二维矩阵问题“降维打击”。逐行处理，维护每一列向上连续空地的“高度” $H[j]$，将每一行看作一个直方图的底部，利用单调栈求解该行对应的最大矩形。最终在 $O(N \times M)$ 时间内解决二维最值问题。
 *   **对应题目**：[洛谷 P4147 玉蟾宫](https://www.luogu.com.cn/problem/P4147)
 
+---
+
 ### 单调队列（Monotonic Queue）
 
 **1. 知识点：滑动窗口最值（单调队列模板）**
@@ -146,6 +149,8 @@
 *   **对应题目**：[洛谷 P1714 切前缀和](https://www.luogu.com.cn/problem/P1714)
 
 *暂时跳过*
+
+---
 
 ### 位运算
 
@@ -161,6 +166,7 @@
 *   **对应题目**：[洛谷 P1226 (快速幂/取模幂)](https://www.luogu.com.cn/problem/P1226)
 
 **3. 知识点：状态压缩枚举（子集/组合问题）**
+
 *   **核心逻辑**：利用整数的二进制位 `0` 或 `1` 表示集合中元素的“不选”或“选中”。遍历 `0` 到 `(1 << N) - 1` 即可不重不漏地枚举出所有组合情况。利用 `Integer.bitCount(mask) == k` 可快速过滤出大小为 $k$ 的合法组合。
 *   **对应题目**：[洛谷 P1036 (选数)](https://www.luogu.com.cn/problem/P1036)
 
@@ -169,7 +175,137 @@
 *   **核心逻辑**：将整个局面编码为一个整数 `mask`。定义 `dp[mask][i]` 表示当前局面为 `mask` 且当前处于 `i` 时的最优状态。转移时使用位运算（如 `mask | (1 << j)`）将当前状态推向下一状态，外层循环必须按 `mask` 从小到大遍历以保证“无后效性”。
 *   **对应题目**：[洛谷 P1433 (吃奶酪)](https://www.luogu.com.cn/problem/P1433)、[洛谷 P2704 (炮兵阵地 - 进阶)](https://www.luogu.com.cn/problem/P2704)
 
+---
 
+### 图论
+
+**1. 知识点：DFS BFS**
+
+- **对应题目**：[P5318 【深基18.例3】查找文献](https://www.luogu.com.cn/problem/P5318)
+
+  ```java
+  // 为什么以下两种写法是错误的？？？
+      private static void dfs(List<Integer>[] adj, boolean[] visited, int n, int start, PrintWriter out) {
+          Deque<Integer> stack = new ArrayDeque<>();
+          stack.push(start);
+          visited[start] = true;
+          while(!stack.isEmpty()){
+              int u = stack.pop();
+              out.print(u);
+              out.print(" ");
+  
+              List<Integer> vs = adj[u];
+              int len = vs.size();
+              for(int i = len - 1;i >= 0;i--){
+                  if(!visited[vs.get(i)]){
+                      stack.push(vs.get(i));
+                      visited[vs.get(i)] = true;
+                  }
+              }
+          }
+      }
+  
+      private static void dfs(List<Integer>[] adj, boolean[] visited, int n, int start, PrintWriter out) {
+          Deque<Integer> stack = new ArrayDeque<>();
+          stack.push(start);
+          visited[start] = true;
+          while(!stack.isEmpty()){
+              int u = stack.pop();
+              out.print(u);
+              out.print(" ");
+              List<Integer> vs = adj[u];
+              int len = vs.size();
+              for(int i = len - 1;i >= 0;i--){
+                  if(!visited[vs.get(i)]){
+                      stack.push(vs.get(i));
+                      visited[vs.get(i)] = true;
+                  }
+              }
+          }
+      }
+  
+  // 正确答案
+  private static void dfs(List<Integer>[] adj, boolean[] visited, int n, int start, PrintWriter out) {
+          Deque<Integer> stack = new ArrayDeque<>();
+          stack.push(start);
+          // visited[start] = true;
+          while(!stack.isEmpty()){
+              int u = stack.pop();
+              if(!visited[u]){
+                  out.print(u);
+                  out.print(" ");
+                  visited[u] = true;
+              }
+              List<Integer> vs = adj[u];
+              int len = vs.size();
+              for(int i = len - 1;i >= 0;i--){
+                  if(!visited[vs.get(i)]){
+                      stack.push(vs.get(i));
+                      // visited[vs.get(i)] = true;
+                  }
+              }
+          }
+      }
+  // 能区分的样例
+  6 6
+  1 2
+  1 3
+  2 4
+  2 5
+  4 6
+  4 5
+  ```
+
+**2. 知识点：反向建图（图论的“逆向逻辑”）**
+
+*   **核心逻辑**：将图中所有的边 $u \to v$ 修改为 $v \to u$。
+    *   **为什么用它**：当原图中的“可达性”计算是**从前驱到后继**（一对多），而我们需要计算**“哪些点能到达某个点”**（多对一）或**“从所有点出发汇聚信息”**时，反向建图能将复杂的全局搜索简化为单次局部搜索。
+    *   **关键点**：反向建图不改变图的强连通分量 (SCC) 结构，但在单源路径问题和依赖传递问题中，它是打破 $O(N^2)$ 超时的唯一路径。
+*   **四大高频场景**：
+    1.  **多源汇聚（如 P3916）**：求“每个点能到达的最大编号”。原图是“从 $i$ 出发”，反向后变成“所有能走到 $i$ 的点”，配合从大到小的遍历，即可一次性锁定最大值。
+    2.  **求所有点到某个点的最短路**：Dijkstra 只能求“点 $S$ 到所有点”。若题目要求“所有点到点 $S$ 的距离”，直接在反向图上从 $S$ 跑一次 Dijkstra，结果与原图等价。
+    3.  **强连通分量 (SCC) 的 Kosaraju 算法**：该算法的核心步骤就是通过“反向建图 + 二次 DFS”来划分强连通分量。
+    4.  **博弈论或依赖消除**：当一个状态 $A$ 依赖于后继状态 $B$ 和 $C$ 时，如果在原图上难以按顺序计算，反向建图可以将依赖链反转，变为从已知状态向未知状态的“推导”。
+
+*   **对应题目**：
+    *   [洛谷 P3916 (图的遍历)](https://www.luogu.com.cn/problem/P3916) **这题不赖**
+    *   [洛谷 P1629 (邮递员送信 - 最短路应用)](https://www.luogu.com.cn/problem/P1629)（此题非常经典，要求所有点到某点的往返，利用反向建图可以极大地减少计算量）
+
+**3. 知识点：Dijkstra 算法**
+
+*   **核心逻辑**：基于贪心策略，每次选取当前距离源点最近的节点进行松弛。使用 `PriorityQueue` 优化后，复杂度为 $O(M \log N)$。在 Java 实现中，必须使用 `long[]` 存储距离以防止 `Integer.MAX_VALUE` 相加导致的溢出。**优化关键**：在 `while` 循环中加入 `if (dist[u] < d) continue;` 进行惰性删除，避免无效计算。
+*   **对应题目**：[洛谷 P4779 (单源最短路径-标准版)](https://www.luogu.com.cn/problem/P4779)
+
+**4. 知识点：0-1 BFS (双端队列最短路)**
+
+*   **核心逻辑**：当边权仅为 0 或 1 时，无需使用 `PriorityQueue`。利用 `ArrayDeque` 实现双端操作：权为 0 的边入队头，权为 1 的边入队尾。复杂度优化为 **$O(V + E)$**，是解决网格图、矩阵搜索类问题的“降维打击”算法。
+*   **对应题目**：[洛谷 P4667 (Switch the Lamp)](https://www.luogu.com.cn/problem/P4667)
+
+**5. 知识点：Floyd-Warshall 算法 (任意两点间最短路)**
+
+*   **核心逻辑**：基于动态规划，`dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])`。外层循环必须是“中转点 `k`”，内存循环为 `i` 和 `j`。
+*   **适用场景**：$N \le 500$ 的稠密图，或题目要求查询任意两点间距离。
+*   **CSP 陷阱**：时间复杂度 $O(N^3)$。禁止在 $N \ge 1000$ 的题目中使用，且注意 `dist[i][k] + dist[k][j]` 加法操作可能导致的溢出。
+*   **对应题目**：[洛谷 P2910 (旅行路线)](https://www.luogu.com.cn/problem/P2910)
+
+**6. 知识点：分层图最短路**
+
+*   **核心逻辑**：当路径搜索带有“机会次数 $K$”或“状态切换”限制时，构建 $N \times (K+1)$ 个节点的新图。每一层代表一次状态改变，在层间通过 0 权边实现跳转。本质是状态空间的图构建。
+*   **对应题目**：[洛谷 P4568 (飞行路线)](https://www.luogu.com.cn/problem/P4568)
+
+**7. 知识点：Bellman-Ford 算法**
+
+*   **核心逻辑**：基于动态规划（状态转移）思想，核心动作是对所有边进行“松弛”。算法的底层原理在于其**逐层递推**的过程：外层循环的每一轮 $K$（$1 \le K \le N-1$），其真实的物理含义是——**计算出从起点出发，最多经过 $K$ 条边到达各个顶点的最短路径**。因为在一个包含 $N$ 个顶点的图中，任意两点间的最短简单路径（不兜圈子）最多只包含 $N-1$ 条边，所以强制执行 $N-1$ 轮遍历，就能像水波一样把最短路径的信息推导至极限。这种“按边的跳数全局复盘”的机制，彻底摒弃了 Dijkstra 的局部贪心，因此能完美处理**负权边**。进一步地，如果进入第 $N$ 轮遍历（即允许走 $N$ 条边）时依然能发生松弛，根据鸽巢原理，走 $N$ 条边必然重复经过了某个顶点，且总权重还在缩小，这必定意味着图中存在**负权环**（无限倒贴钱的死循环）。时间复杂度为 $O(N \times M)$。**优化关键**：在 $N-1$ 轮循环中加入 `boolean updated;` 标记，若第 $K$ 轮没有任何距离被更新，说明“最多经过 $K$ 条边”的结果已经是最优解，全局最短路已提前确立，直接 `break` 结束循环，这是避免 TLE 的黄金剪枝策略。
+*   **对应题目**：[洛谷 P3385 【模板】负环](https://www.google.com/url?sa=E&q=https%3A%2F%2Fwww.luogu.com.cn%2Fproblem%2FP3385)
+
+**8. 知识点：并查集 (DSU)**
+*   **核心逻辑**：通过路径压缩优化查询效率，利用树形结构管理不相交集合，实现连通性判断及动态连通块维护，是处理复杂图论合并问题的利器。
+*   **对应题目**：
+    *   [洛谷 P3367 【模板】并查集](https://www.luogu.com.cn/problem/P3367)
+    *   [洛谷 P1551 亲戚](https://www.luogu.com.cn/problem/P1551)
+    *   [洛谷 P1197 [JSOI2008] 星球大战](https://www.luogu.com.cn/problem/P1197)
+
+---
 
 ### 提醒点
 
@@ -177,7 +313,8 @@
 - `S[i] / mid - (S[i] % mid == 0 && S[i] != 0 ? 1 : 0);` 和 `(S[i] - 1) / mid;` 是一样的
 - 处理 10<sup>5</sup> 的数据的时候，最好不要使用 HashMap，内存可能会炸
 - **内存优化技巧（long 压缩）**：若需存储两个 int（如坐标和类型、值和索引）并进行排序，可使用 long 数组替代对象数组。通过 (long)v << 32 | (id & 0xFFFFFFFFL) 压缩，Arrays.sort(long[]) 比对象排序更快且内存占用仅为 1/3 到 1/4。
-- 数组容量心算预估：128MB 限制下 int[] 的安全上限约 1.5 * 10<sup>8</sup> ~ 2 * 10<sup>8</sup>（long[] 减半，256MB 翻倍），请时刻预留 30MB 左右的 JVM 基础开销。
+- 数组容量心算预估：128MB 限制下 int[] 的安全上限约 1.5 * 10<sup>8</sup> ~ 2 * 10
+- <sup>8</sup>（long[] 减半，256MB 翻倍），请时刻预留 30MB 左右的 JVM 基础开销。
 - 警惕 Java 内存刺客（防 MLE）：① 杜绝包装类（Integer[] 占用是 int[] 的 5 倍以上）；② 二维数组对象头开销大，行数极多且内存紧张时，务必用一维数组模拟二维（arr[i * cols + j]）。
 - 清空栈的代价：在多组数据或多次扫描时，使用 `top = -1` 即可实现 $O(1)$ 清空手写栈，严禁使用 $O(N)$ 的 `Arrays.fill(arr, 0)`，因为反正把 top 改成了 -1 之后也会覆盖。
 
