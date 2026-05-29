@@ -370,6 +370,24 @@ $$dp[i, c] = \max(dp[i - 1, c], dp[i, c - wgt[i - 1]] + val[i - 1])$$
 
 
 
+**1. 知识点：多重背包与“二进制拆分” (Binary Splitting)**
+*   **核心逻辑**：物品有限制数量 $C_i$。直接展开的时间复杂度为 $O(V \times \sum C_i)$，极其缓慢。利用二进制思想，将 $C_i$ 个物品打包成大小为 $1, 2, 4, 8 \dots (C_i - 2^k + 1)$ 的 $\log C_i$ 个新包裹。因为这些包裹可以拼凑出 $0 \sim C_i$ 之间的任意取法，所以直接将这些新包裹作为全新物品，跑一遍基础的 0-1 背包即可，复杂度暴降至 $O(V \times \sum \log C_i)$。
+*   **对应题目**：[洛谷 P1776 宝物筛选](https://www.luogu.com.cn/problem/P1776)
+
+**2. 知识点：分组背包与“极危循环序”**
+*   **核心逻辑**：物品被划分为 $K$ 组，每组内的物品互斥，**最多只能选一个**。
+*   **💣 致命易错点（三重循环顺序必须死记）**：
+    1.  最外层：枚举不同的**分组 $k$**。
+    2.  中间层：枚举背包**容量 $c$（必须逆序！）**。
+    3.  最内层：枚举当前分组内的**物品 $i$**。
+    *注：若将容量和物品循环颠倒，会导致同一个组内的物品被重复放入背包。*
+*   **对应题目**：[洛谷 P1757 通天之分组背包](https://www.luogu.com.cn/problem/P1757)
+
+**3. 知识点：依赖背包与组合降维 (OOP 思想)**
+*   **核心逻辑**：购买附件必须先买主件。若使用传统的 `if-else` 枚举附件情况，代码会极其冗长且难以扩展。
+*   **高级技巧**：将“主件”及其所有“附件”的搭配方案（例如：仅主件、主+附1、主+附2、主+附1+附2）视为**一个分组内的互斥物品**。通过面向对象 (OOP) 建立 `Group` 类，利用递归或位运算自动生成该主件所有的合法组合（幂集），从而极其优雅地**将“依赖背包”转化为“分组背包”**解决。
+*   **对应题目**：[洛谷 P1064 [NOIP2006 提高组] 金明的预算方案](https://www.luogu.com.cn/problem/P1064)
+
 
 
 ---
@@ -456,6 +474,21 @@ $$dp[i, c] = \max(dp[i - 1, c], dp[i, c - wgt[i - 1]] + val[i - 1])$$
   ```java
   int left = i % n + 1; // 顺时针
   int right = (i - 2 + n) % n + 1; // 逆时针
+  ```
+
+- 求并集时可以做个小优化：
+  ```java
+  private static HashSet<Integer> AndSet(HashSet<Integer> integers, HashSet<Integer> integers1) {
+      HashSet<Integer> ans = new HashSet<>();
+      // 性能小技巧：遍历小的集合，在大的集合里查 contains
+      if (integers.size() > integers1.size()) {
+          HashSet<Integer> temp = integers; integers = integers1; integers1 = temp;
+      }
+      for(int val : integers){
+          if(integers1.contains(val)) ans.add(val);
+      }
+      return ans;
+  }
   ```
 
   
