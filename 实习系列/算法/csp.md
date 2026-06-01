@@ -286,6 +286,34 @@
 *   **核心逻辑**：基于动态规划，`dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])`。外层循环必须是“中转点 `k`”，内存循环为 `i` 和 `j`。
 *   **适用场景**：$N \le 500$ 的稠密图，或题目要求查询任意两点间距离。
 *   **CSP 陷阱**：时间复杂度 $O(N^3)$。禁止在 $N \ge 1000$ 的题目中使用，且注意 `dist[i][k] + dist[k][j]` 加法操作可能导致的溢出。
+* 实现：
+  ```java
+      public static void floydWarshall(int[][] graph, int n) {
+          // 创建距离矩阵，初始为图的邻接矩阵副本
+          int[][] dist = new int[n][n];
+          for (int i = 0; i < n; i++) {
+              System.arraycopy(graph[i], 0, dist[i], 0, n);
+          }
+  
+          // 核心算法：三重循环
+          // k 作为中间顶点
+          for (int k = 0; k < n; k++) {
+              // i 作为起点
+              for (int i = 0; i < n; i++) {
+                  // j 作为终点
+                  for (int j = 0; j < n; j++) {
+                      // 如果经过 k 的路径比当前路径更短，则更新
+                      if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                          dist[i][j] = dist[i][k] + dist[k][j];
+                      }
+                  }
+              }
+          }
+  
+          // 输出最终的最短距离矩阵
+          printSolution(dist, n);
+      }
+  ```
 *   **对应题目**：[洛谷 P2910 (旅行路线)](https://www.luogu.com.cn/problem/P2910)
 
 **6. 知识点：分层图最短路**
@@ -296,6 +324,45 @@
 **7. 知识点：Bellman-Ford 算法**
 
 *   **核心逻辑**：基于动态规划（状态转移）思想，核心动作是对所有边进行“松弛”。算法的底层原理在于其**逐层递推**的过程：外层循环的每一轮 $K$（$1 \le K \le N-1$），其真实的物理含义是——**计算出从起点出发，最多经过 $K$ 条边到达各个顶点的最短路径**。因为在一个包含 $N$ 个顶点的图中，任意两点间的最短简单路径（不兜圈子）最多只包含 $N-1$ 条边，所以强制执行 $N-1$ 轮遍历，就能像水波一样把最短路径的信息推导至极限。这种“按边的跳数全局复盘”的机制，彻底摒弃了 Dijkstra 的局部贪心，因此能完美处理**负权边**。进一步地，如果进入第 $N$ 轮遍历（即允许走 $N$ 条边）时依然能发生松弛，根据鸽巢原理，走 $N$ 条边必然重复经过了某个顶点，且总权重还在缩小，这必定意味着图中存在**负权环**（无限倒贴钱的死循环）。时间复杂度为 $O(N \times M)$。**优化关键**：在 $N-1$ 轮循环中加入 `boolean updated;` 标记，若第 $K$ 轮没有任何距离被更新，说明“最多经过 $K$ 条边”的结果已经是最优解，全局最短路已提前确立，直接 `break` 结束循环，这是避免 TLE 的黄金剪枝策略。
+* 实现：
+  ```java
+  /**
+   * Bellman-Ford 算法核心实现
+   * @param n 顶点个数
+   * @param edges 边集，每条边为 {u, v, w}
+   * @param source 源点
+   * @return dist 数组，若包含负权环则返回 null
+   */
+  public static int[] bellmanFord(int n, int[][] edges, int source) {
+      int INF = Integer.MAX_VALUE / 2;
+      int[] dist = new int[n];
+      Arrays.fill(dist, INF);
+      dist[source] = 0;
+      
+      // 松弛 n-1 次
+      for (int i = 1; i < n; i++) {
+          boolean updated = false;
+          for (int[] e : edges) {
+              int u = e[0], v = e[1], w = e[2];
+              if (dist[u] < INF && dist[u] + w < dist[v]) {
+                  dist[v] = dist[u] + w;
+                  updated = true;
+              }
+          }
+          if (!updated) break;
+      }
+      
+      // 检测负权环
+      for (int[] e : edges) {
+          int u = e[0], v = e[1], w = e[2];
+          if (dist[u] < INF && dist[u] + w < dist[v]) {
+              return null; // 存在负权环
+          }
+      }
+      
+      return dist;
+  }
+  ```
 *   **对应题目**：[洛谷 P3385 【模板】负环](https://www.google.com/url?sa=E&q=https%3A%2F%2Fwww.luogu.com.cn%2Fproblem%2FP3385)
 
 **8. 知识点：并查集 (DSU)**
@@ -305,6 +372,48 @@
     *   [洛谷 P3367 【模板】并查集](https://www.luogu.com.cn/problem/P3367)
     *   [洛谷 P1551 亲戚](https://www.luogu.com.cn/problem/P1551)
     *   [洛谷 P1197 [JSOI2008] 星球大战](https://www.luogu.com.cn/problem/P1197)
+
+
+
+拓扑排序
+
+```java
+public static int[] topologicalSortKahn(int n, List<Integer>[] graph) {
+    int[] inDegree = new int[n];
+    
+    // 计算入度
+    for (int u = 0; u < n; u++) {
+        for (int v : graph[u]) {
+            inDegree[v]++;
+        }
+    }
+    
+    // 将入度为0的顶点入队
+    Queue<Integer> queue = new LinkedList<>();
+    for (int i = 0; i < n; i++) {
+        if (inDegree[i] == 0) queue.offer(i);
+    }
+    
+    int[] result = new int[n];
+    int index = 0;
+    
+    while (!queue.isEmpty()) {
+        int u = queue.poll();
+        result[index++] = u;
+        
+        for (int v : graph[u]) {
+            if (--inDegree[v] == 0) {
+                queue.offer(v);
+            }
+        }
+    }
+    
+    // 检查是否有环
+    return index == n ? result : null;
+}
+```
+
+
 
 ---
 
