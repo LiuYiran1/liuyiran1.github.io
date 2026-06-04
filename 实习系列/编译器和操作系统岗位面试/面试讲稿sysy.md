@@ -31,11 +31,20 @@ direction LR
 class Context
 class Module
 class IRBuilder
-class NameManager <<utility>>
-class ConstantZero <<utility>>
-class ConstantAggregateZero <<utility>>
 
-class TypeID <<enumeration>>
+class NameManager {
+    <<utility>>
+}
+class ConstantZero {
+    <<utility>>
+}
+class ConstantAggregateZero {
+    <<utility>>
+}
+
+class TypeID {
+    <<enumeration>>
+}
 class Type
 class VoidType
 class IntegerType
@@ -87,13 +96,27 @@ class CallInst
 class PhiInst
 class GetElementPtrInst
 
-class AllocException <<exception>>
-class CondException <<exception>>
-class ConstantException <<exception>>
-class GEPException <<exception>>
-class LoadException <<exception>>
-class StoreException <<exception>>
-class ZeroExtException <<exception>>
+class AllocException {
+    <<exception>>
+}
+class CondException {
+    <<exception>>
+}
+class ConstantException {
+    <<exception>>
+}
+class GEPException {
+    <<exception>>
+}
+class LoadException {
+    <<exception>>
+}
+class StoreException {
+    <<exception>>
+}
+class ZeroExtException {
+    <<exception>>
+}
 
 Type <|-- VoidType
 Type <|-- IntegerType
